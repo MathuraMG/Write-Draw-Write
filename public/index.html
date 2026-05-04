@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d0d1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Write Draw Write</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- RULES MODAL -->
+  <div id="rules-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <button id="btn-close-rules" class="modal-close" aria-label="Close">✕</button>
+      <h3 class="modal-title">How to Play</h3>
+      <ol class="rules-list">
+        <li>Everyone joins the same room on their phone.</li>
+        <li>Each player is secretly given a <strong>word to draw</strong>.</li>
+        <li>You have <strong>30 seconds</strong> — draw as best you can!</li>
+        <li>Your drawing is passed to the next player, who must <strong>guess the word</strong> in 30 seconds.</li>
+        <li>That guess is passed on for someone else to <strong>draw again</strong>.</li>
+        <li>This continues until every chain has gone through all players.</li>
+        <li>Then comes <strong>The Reveal</strong> — see how your original word transformed!</li>
+      </ol>
+      <p class="rules-note">No winners. Just chaos and laughter.</p>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="home-logo">
+      <div class="logo-line"><span class="logo-write">Write</span></div>
+      <div class="logo-line"><span class="logo-draw">Draw</span></div>
+      <div class="logo-line"><span class="logo-write2">Write</span></div>
+    </div>
+    <p class="tagline">The telephone game, now visual</p>
+    <div class="card">
+      <input type="text" id="home-name" placeholder="Your name" maxlength="20" autocomplete="off" autocapitalize="words" inputmode="text">
+      <div class="spacer"></div>
+      <button id="btn-create" class="btn btn-primary">Create Room</button>
+      <button id="btn-join-toggle" class="btn btn-ghost">Join a Room</button>
+      <div id="join-form" class="hidden">
+        <input type="text" id="home-code" placeholder="Room code (e.g. AB3K)" maxlength="4" autocomplete="off" autocapitalize="characters" inputmode="text" class="code-input">
+        <button id="btn-join" class="btn btn-secondary">Join</button>
+      </div>
+      <div id="home-error" class="error-msg hidden"></div>
+    </div>
+    <button id="btn-rules" class="btn-how-to-play">How to play?</button>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-header">
+      <p class="hint">Share this code:</p>
+      <div class="room-code-badge" id="lobby-code"></div>
+      <p class="hint" id="lobby-hint">Waiting for players to join...</p>
+    </div>
+    <div id="player-list" class="player-list"></div>
+    <div class="lobby-footer">
+      <button id="btn-start" class="btn btn-primary hidden">Start Game</button>
+      <p id="lobby-waiting" class="hint hidden">Waiting for the host to start...</p>
+      <div id="lobby-error" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <span id="game-round-label" class="round-label"></span>
+      <div class="timer-wrap">
+        <div id="timer-bar-track">
+          <div id="timer-bar-fill"></div>
+        </div>
+        <span id="timer-num">30</span>
+      </div>
+    </div>
+
+    <!-- DRAW phase -->
+    <div id="phase-draw" class="phase hidden">
+      <p class="phase-prompt">Draw this word:</p>
+      <p id="draw-word" class="big-word"></p>
+      <div id="canvas-wrap"></div>
+      <div class="tool-row">
+        <div id="palette"></div>
+        <button id="btn-eraser" class="tool-btn" data-active="false">Eraser</button>
+        <button id="btn-clear" class="tool-btn">Clear</button>
+      </div>
+      <div class="tool-row">
+        <label class="size-label">Size</label>
+        <input type="range" id="brush-size" min="2" max="24" value="6" class="brush-slider">
+      </div>
+      <button id="btn-submit-draw" class="btn btn-primary submit-btn">Done Drawing</button>
+    </div>
+
+    <!-- GUESS phase -->
+    <div id="phase-guess" class="phase hidden">
+      <p class="phase-prompt">What is this drawing?</p>
+      <div id="guess-img-wrap">
+        <img id="guess-img" src="" alt="Drawing to guess">
+        <div id="guess-no-drawing" class="hidden no-drawing-placeholder">Player ran out of time</div>
+      </div>
+      <div class="guess-input-row">
+        <input type="text" id="guess-input" placeholder="Your guess..." maxlength="30" autocomplete="off" autocapitalize="none" inputmode="text">
+        <button id="btn-submit-guess" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+
+    <!-- WAIT phase -->
+    <div id="phase-wait" class="phase hidden">
+      <div class="submitted-badge">Submitted!</div>
+      <div class="spinner"></div>
+      <p class="wait-text">Waiting for everyone...</p>
+      <p id="wait-progress" class="hint"></p>
+    </div>
+  </div>
+
+  <!-- REVEAL -->
+  <div id="screen-reveal" class="screen">
+    <div class="reveal-header">
+      <h2>The Reveal!</h2>
+      <p class="hint" id="reveal-chain-counter"></p>
+    </div>
+    <div id="reveal-nav" class="reveal-nav"></div>
+    <div id="reveal-chain" class="reveal-chain"></div>
+    <div class="reveal-controls">
+      <button id="btn-next-chain" class="btn btn-secondary hidden">Next Chain</button>
+      <button id="btn-play-again" class="btn btn-ghost hidden">Play Again</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
