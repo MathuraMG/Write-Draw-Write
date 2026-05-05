@@ -9,18 +9,26 @@ const io = new Server(server, { maxHttpBufferSize: 5e6 });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const TURN_SECONDS = 30;
+const DRAW_SECONDS = 30;
+const GUESS_SECONDS = 15;
 
 const WORDS = [
-  'cat', 'dog', 'elephant', 'penguin', 'dragon', 'jellyfish', 'butterfly', 'shark',
-  'bicycle', 'umbrella', 'telescope', 'guitar', 'crown', 'anchor', 'compass',
-  'rainbow', 'volcano', 'tornado', 'waterfall', 'cactus', 'mushroom', 'snowflake',
-  'pizza', 'sandwich', 'sushi', 'ice cream', 'donut', 'hotdog', 'taco',
-  'castle', 'lighthouse', 'spaceship', 'submarine', 'parachute', 'rocket',
-  'house', 'tree', 'sun', 'moon', 'star', 'cloud', 'mountain', 'bridge', 'boat',
-  'robot', 'alien', 'wizard', 'pirate', 'ninja', 'mermaid', 'ghost', 'unicorn',
-  'fire', 'wave', 'snail', 'frog', 'owl', 'fox', 'bear', 'duck', 'snake',
-  'clock', 'chair', 'lamp', 'phone', 'key', 'hat', 'shoe', 'cup', 'ball'
+  'dancing octopus', 'underwater cat', 'flying pizza', 'sleepy dragon',
+  'angry sandwich', 'tiny elephant', 'exploding volcano', 'crying robot',
+  'surfing penguin', 'sneezing wizard', 'singing cactus', 'running chair',
+  'melting snowman', 'laughing shark', 'floating castle', 'grumpy astronaut',
+  'boxing kangaroo', 'disco dinosaur', 'angry teapot', 'flying carpet',
+  'dancing skeleton', 'crying onion', 'hungry moon', 'swimming elephant',
+  'bored mermaid', 'confused compass', 'grumpy lighthouse', 'underwater bicycle',
+  'snoring mountain', 'angry rainbow', 'sad umbrella', 'running volcano',
+  'confused penguin', 'hungry robot', 'flying bathtub', 'dancing hotdog',
+  'underwater piano', 'grumpy sun', 'tiny whale', 'exploding watermelon',
+  'sad cactus', 'angry cloud', 'dancing toaster', 'invisible ghost',
+  'tiny tornado', 'sleepy astronaut', 'flying grandma', 'singing robot',
+  'grumpy unicorn', 'surprised shark', 'melting ice cream', 'flying teapot',
+  'dancing traffic cone', 'underwater astronaut', 'tiny thunderstorm',
+  'bored vampire', 'confused snowman', 'angry ballerina', 'sleepy volcano',
+  'dancing fridge', 'invisible bicycle', 'hungry tornado', 'tiny spaceship'
 ];
 
 const rooms = {};
@@ -227,15 +235,16 @@ function advanceRound(code) {
 function startTimer(code) {
   const room = rooms[code];
   const roundAtStart = room.currentRound;
-  const deadline = Date.now() + (TURN_SECONDS + 2) * 1000;
+  const isDrawRound = room.currentRound % 2 === 0;
+  const seconds = isDrawRound ? DRAW_SECONDS : GUESS_SECONDS;
 
-  io.to(code).emit('timer_start', { seconds: TURN_SECONDS, deadline });
+  io.to(code).emit('timer_start', { seconds });
 
   room.timerHandle = setTimeout(() => {
     if (rooms[code] && rooms[code].currentRound === roundAtStart) {
       advanceRound(code);
     }
-  }, (TURN_SECONDS + 2) * 1000);
+  }, (seconds + 2) * 1000);
 }
 
 // Clean up stale rooms every 10 minutes
